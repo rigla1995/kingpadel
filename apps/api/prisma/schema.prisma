@@ -68,13 +68,14 @@ model User {
   refreshToken  String?
 
   // Relations
-  reservations      Reservation[]
-  lobbyCreated      Lobby[]         @relation("LobbyCreator")
-  lobbyParticipants LobbyPlayer[]
-  matchScores       MatchScore[]
-  subscriptions     VenueSubscription[]
-  notifications     Notification[]
-  managedVenues     Venue[]
+  reservations         Reservation[]
+  lobbyCreated         Lobby[]            @relation("LobbyCreator")
+  lobbyParticipants    LobbyPlayer[]
+  matchScores          MatchScore[]
+  subscriptions        VenueSubscription[]
+  notifications        Notification[]
+  managedVenues        Venue[]
+  eventParticipations  EventParticipant[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -206,6 +207,7 @@ model EventParticipant {
   eventId String
   event   Event  @relation(fields: [eventId], references: [id])
   userId  String
+  user    User   @relation(fields: [userId], references: [id])
 
   createdAt DateTime @default(now())
 
