@@ -8,6 +8,9 @@
   ],
   "scripts": {
     "dev": "turbo run dev",
+    "dev:web": "turbo run dev --filter=@kingpadel/api --filter=@kingpadel/web-enseigne --filter=@kingpadel/web-admin",
+    "dev:api": "pnpm --filter @kingpadel/api dev",
+    "dev:mobile": "pnpm --filter @kingpadel/mobile dev",
     "build": "turbo run build",
     "test": "turbo run test",
     "lint": "turbo run lint",
