@@ -19,10 +19,26 @@ kingpadel/
 
 ## Prérequis
 
-- [Node.js 20+](https://nodejs.org)
-- [pnpm 9+](https://pnpm.io) : `npm install -g pnpm`
-- [Docker Desktop](https://www.docker.com/products/docker-desktop)
-- [Expo CLI](https://docs.expo.dev) : `npm install -g @expo/cli`
+### Windows (Git Bash / PowerShell)
+
+1. **Node.js 20 LTS** — https://nodejs.org → bouton vert "LTS" → installer avec options par défaut
+2. **pnpm** — ouvrir Git Bash après installation de Node.js :
+   ```bash
+   npm install -g pnpm
+   ```
+3. **Docker Desktop** — https://www.docker.com/products/docker-desktop → installer et **le lancer** avant de continuer
+4. **Git** — déjà installé si vous utilisez Git Bash
+
+> Après installation de Node.js, **fermer et rouvrir** Git Bash pour que les commandes soient reconnues.
+
+### Vérification
+
+```bash
+node --version    # v20.x.x
+npm --version     # 10.x.x
+pnpm --version    # 9.x.x
+docker --version  # Docker version 2x.x
+```
 
 ## Installation & Démarrage
 
@@ -37,6 +53,10 @@ cd kingpadel
 
 ```bash
 cp .env.example .env
+# Pour les apps web (optionnel pour commencer) :
+cp apps/web-enseigne/.env.local.example apps/web-enseigne/.env.local
+cp apps/web-admin/.env.local.example apps/web-admin/.env.local
+cp apps/mobile/.env.example apps/mobile/.env
 ```
 
 Les valeurs par défaut fonctionnent pour le développement local.
