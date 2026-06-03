@@ -5,6 +5,15 @@ const path = require('path');
 
 const root = path.resolve(__dirname, '..');
 
+function copyAlways(src, dest) {
+  if (!fs.existsSync(src)) {
+    console.error(`Source not found: ${src}`);
+    return;
+  }
+  fs.copyFileSync(src, dest);
+  console.log(`Copied: ${dest}`);
+}
+
 function copyIfNotExists(src, dest) {
   if (!fs.existsSync(src)) {
     console.error(`Source not found: ${src}`);
@@ -27,8 +36,8 @@ if (!fs.existsSync(rootEnv) && fs.existsSync(rootEnvExample)) {
   console.log('Created root .env from .env.example');
 }
 
-// Copy root .env to apps that need it
-copyIfNotExists(rootEnv, path.join(root, 'apps/api/.env'));
+// Always overwrite apps/api/.env from root (never user-customized)
+copyAlways(rootEnv, path.join(root, 'apps/api/.env'));
 
 // Copy web app env files
 copyIfNotExists(
