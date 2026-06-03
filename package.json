@@ -7,6 +7,7 @@
     "packages/*"
   ],
   "scripts": {
+    "setup": "node scripts/setup-env.js",
     "dev": "turbo run dev",
     "dev:web": "turbo run dev --filter=@kingpadel/api --filter=@kingpadel/web-enseigne --filter=@kingpadel/web-admin",
     "dev:api": "pnpm --filter @kingpadel/api dev",
