@@ -1,0 +1,294 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────
+
+enum UserRole {
+  PLAYER
+  VENUE_MANAGER
+  ADMIN
+}
+
+enum PlayerLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  PRO
+}
+
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+enum EventType {
+  PUBLIC
+  PRIVATE
+}
+
+enum LobbyStatus {
+  OPEN
+  FULL
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum MatchResult {
+  WIN
+  LOSS
+  DRAW
+}
+
+// ─────────────────────────────────────────
+// USER
+// ─────────────────────────────────────────
+
+model User {
+  id            String      @id @default(cuid())
+  email         String      @unique
+  passwordHash  String?
+  firstName     String
+  lastName      String
+  phone         String?
+  avatar        String?
+  role          UserRole    @default(PLAYER)
+  level         PlayerLevel @default(BEGINNER)
+  eloScore      Int         @default(1000)
+  isVerified    Boolean     @default(false)
+  refreshToken  String?
+
+  // Relations
+  reservations      Reservation[]
+  lobbyCreated      Lobby[]         @relation("LobbyCreator")
+  lobbyParticipants LobbyPlayer[]
+  matchScores       MatchScore[]
+  subscriptions     VenueSubscription[]
+  notifications     Notification[]
+  managedVenues     Venue[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+// ─────────────────────────────────────────
+// VENUE (Enseigne)
+// ─────────────────────────────────────────
+
+model Venue {
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+  address     String
+  city        String
+  phone       String?
+  email       String?
+  logo        String?
+  coverImage  String?
+  isSponsored Boolean @default(false)
+  sponsorRank Int     @default(0)
+  isActive    Boolean @default(true)
+
+  managerId String
+  manager   User   @relation(fields: [managerId], references: [id])
+
+  courts        Court[]
+  events        Event[]
+  subscriptions VenueSubscription[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("venues")
+}
+
+// ─────────────────────────────────────────
+// COURT (Terrain)
+// ─────────────────────────────────────────
+
+model Court {
+  id           String  @id @default(cuid())
+  name         String
+  surface      String  @default("artificial_grass")
+  isIndoor     Boolean @default(false)
+  pricePerSlot Decimal
+  slotDuration Int     @default(90)
+  isActive     Boolean @default(true)
+
+  venueId String
+  venue   Venue  @relation(fields: [venueId], references: [id])
+
+  availabilities CourtAvailability[]
+  reservations   Reservation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("courts")
+}
+
+model CourtAvailability {
+  id        String   @id @default(cuid())
+  courtId   String
+  court     Court    @relation(fields: [courtId], references: [id])
+  dayOfWeek Int
+  openTime  String
+  closeTime String
+
+  @@map("court_availabilities")
+}
+
+// ─────────────────────────────────────────
+// RESERVATION
+// ─────────────────────────────────────────
+
+model Reservation {
+  id        String            @id @default(cuid())
+  startTime DateTime
+  endTime   DateTime
+  status    ReservationStatus @default(PENDING)
+  totalPrice Decimal
+  paidAt    DateTime?
+
+  userId  String
+  user    User   @relation(fields: [userId], references: [id])
+  courtId String
+  court   Court  @relation(fields: [courtId], references: [id])
+
+  lobby Lobby?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("reservations")
+}
+
+// ─────────────────────────────────────────
+// EVENT
+// ─────────────────────────────────────────
+
+model Event {
+  id           String      @id @default(cuid())
+  title        String
+  description  String?
+  type         EventType   @default(PUBLIC)
+  requiredLevel PlayerLevel?
+  maxPlayers   Int
+  startDate    DateTime
+  endDate      DateTime
+  price        Decimal     @default(0)
+  coverImage   String?
+
+  venueId String
+  venue   Venue  @relation(fields: [venueId], references: [id])
+
+  participants EventParticipant[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("events")
+}
+
+model EventParticipant {
+  id      String @id @default(cuid())
+  eventId String
+  event   Event  @relation(fields: [eventId], references: [id])
+  userId  String
+
+  createdAt DateTime @default(now())
+
+  @@unique([eventId, userId])
+  @@map("event_participants")
+}
+
+// ─────────────────────────────────────────
+// LOBBY & MATCH
+// ─────────────────────────────────────────
+
+model Lobby {
+  id     String      @id @default(cuid())
+  status LobbyStatus @default(OPEN)
+
+  reservationId String      @unique
+  reservation   Reservation @relation(fields: [reservationId], references: [id])
+  creatorId     String
+  creator       User        @relation("LobbyCreator", fields: [creatorId], references: [id])
+
+  players LobbyPlayer[]
+  scores  MatchScore[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("lobbies")
+}
+
+model LobbyPlayer {
+  id      String @id @default(cuid())
+  lobbyId String
+  lobby   Lobby  @relation(fields: [lobbyId], references: [id])
+  userId  String
+  user    User   @relation(fields: [userId], references: [id])
+
+  @@unique([lobbyId, userId])
+  @@map("lobby_players")
+}
+
+model MatchScore {
+  id      String      @id @default(cuid())
+  lobbyId String
+  lobby   Lobby       @relation(fields: [lobbyId], references: [id])
+  userId  String
+  user    User        @relation(fields: [userId], references: [id])
+  score   String
+  result  MatchResult
+  eloChange Int       @default(0)
+
+  createdAt DateTime @default(now())
+
+  @@unique([lobbyId, userId])
+  @@map("match_scores")
+}
+
+// ─────────────────────────────────────────
+// SUBSCRIPTIONS & NOTIFICATIONS
+// ─────────────────────────────────────────
+
+model VenueSubscription {
+  id      String @id @default(cuid())
+  venueId String
+  venue   Venue  @relation(fields: [venueId], references: [id])
+  userId  String
+  user    User   @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@unique([venueId, userId])
+  @@map("venue_subscriptions")
+}
+
+model Notification {
+  id      String  @id @default(cuid())
+  userId  String
+  user    User    @relation(fields: [userId], references: [id])
+  title   String
+  body    String
+  isRead  Boolean @default(false)
+  data    Json?
+
+  createdAt DateTime @default(now())
+
+  @@map("notifications")
+}
