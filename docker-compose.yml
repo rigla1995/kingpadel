@@ -1,5 +1,3 @@
-version: '3.9'
-
 services:
   postgres:
     image: postgres:16-alpine
@@ -34,6 +32,8 @@ services:
   maildev:
     image: maildev/maildev
     container_name: kingpadel_maildev
+    profiles:
+      - tools
     ports:
       - '1080:1080'
       - '1025:1025'
